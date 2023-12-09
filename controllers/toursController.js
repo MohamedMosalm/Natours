@@ -1,70 +1,89 @@
-const fs = require("fs");
+const Tour = require('../models/tourModel');
 
-const tours = JSON.parse(
-  fs.readFileSync(`${__dirname}/../dev-data/data/tours-simple.json`)
-);
-
-const getAllTours = (req, res) => {
-  return res.status(200).json({
-    status: "success",
-    result: tours.length,
-    data: { tours },
-  });
-};
-
-const createTour = (req, res) => {
-  const newId = tours[tours.length - 1].id + 1;
-  const newTour = { id: newId, ...req.body };
-  tours.push(newTour);
-
-  fs.writeFile(
-    `${__dirname}/dev-data/data/tours-simple.json`,
-    JSON.stringify(tours),
-    (error) => {
-      return res.status(200).json({
-        status: "success",
-        data: { tour: newTour },
-      });
-    }
-  );
-};
-
-const getTour = (req, res) => {
-  const id = parseInt(req.params.tourId);
-  const tour = tours.find((t) => t.id === parseInt(id));
-  if (!tour) {
+const getAllTours = async (req, res) => {
+  try {
+    const tours = await Tour.find({}, { _id: false, __v: false });
+    return res.status(200).json({
+      status: 'success',
+      results: tours.length,
+      data: { tours },
+    });
+  } catch (err) {
     return res.status(404).json({
-      status: "fail",
-      message: "Tour not found",
+      status: 'fail',
+      message: err.message,
     });
   }
-  return res.status(200).json({
-    status: "success",
-    data: { tour },
-  });
 };
 
-const updateTour = (req, res) => {
-  const id = parseInt(req.params.tourId);
-  const tour = tours.find((t) => t.id === parseInt(id));
-  if (!tour) {
-    return res.status(404).json({
-      status: "fail",
-      message: "Tour not found",
+const createTour = async (req, res) => {
+  try {
+    const newTour = await Tour.create(req.body);
+    res.status(201).json({
+      status: 'success',
+      data: { tour: newTour },
+    });
+  } catch (err) {
+    res.status(400).json({
+      status: 'fail',
+      message: err.message,
     });
   }
-  const index = tours.findIndex((t) => t.id === parseInt(id));
-  tours[index] = { ...tour, ...req.body };
 };
 
-const deleteTour = (req, res) => {
-  const id = parseInt(req.params.tourId);
-  const tour = tours.find((t) => t.id === parseInt(id));
-  tours = tours.filter((t) => t.id !== id);
-  return res.status(204).json({
-    status: "success",
-    data: null,
-  });
+const getTour = async (req, res) => {
+  try {
+    const tour = await Tour.findById(req.params.tourId, {
+      _id: false,
+      __v: false,
+    });
+    res.status(200).json({
+      status: 'success',
+      data: { tour },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+const updateTour = async (req, res) => {
+  try {
+    const updateTour = await Tour.findByIdAndUpdate(
+      req.params.tourId,
+      req.body,
+      {
+        new: true,
+        runValidators: true,
+      },
+    );
+    res.status(200).json({
+      status: 'success',
+      data: updateTour,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+const deleteTour = async (req, res) => {
+  try {
+    await Tour.findByIdAndDelete(req.params.tourId);
+    res.status(204).json({
+      status: 'success',
+      data: null,
+    });
+  } catch (err) {
+    res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
 };
 
 module.exports = {
