@@ -1,8 +1,16 @@
 const Tour = require('../models/tourModel');
+const APIFeatures = require('../utils/APIFeatures');
 
 const getAllTours = async (req, res) => {
   try {
-    const tours = await Tour.find({}, { _id: false, __v: false });
+    const features = new APIFeatures(Tour.find(), req.query)
+      .filter()
+      .sort()
+      .project()
+      .paginate();
+
+    const tours = await features.query;
+
     return res.status(200).json({
       status: 'success',
       results: tours.length,
@@ -86,10 +94,96 @@ const deleteTour = async (req, res) => {
   }
 };
 
+const getTourStats = async (req, res) => {
+  try {
+    const stats = await Tour.aggregate([
+      {
+        $match: { ratingsAverage: { $gte: 4.5 } },
+      },
+      {
+        $group: {
+          _id: { $toUpper: '$difficulty' },
+          numTours: { $sum: 1 },
+          numRatings: { $sum: '$ratingsQuantity' },
+          avgRating: { $avg: '$ratingsAverage' },
+          avgPrice: { $avg: '$price' },
+          minPrice: { $min: '$price' },
+          maxPrice: { $max: '$price' },
+        },
+      },
+      {
+        $sort: { avgPrice: 1 },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: 'success',
+      data: { stats },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
+const getMonthlyPlan = async (req, res) => {
+  try {
+    const year = parseInt(req.params.year);
+    const plan = await Tour.aggregate([
+      {
+        $unwind: '$startDates',
+      },
+      {
+        $match: {
+          startDates: {
+            $gte: new Date(`${year}-01-01`),
+            $lte: new Date(`${year}-12-31`),
+          },
+        },
+      },
+      {
+        $group: {
+          _id: { $month: '$startDates' },
+          numOfTours: { $sum: 1 },
+          tours: { $push: '$name' },
+        },
+      },
+      {
+        $sort: { _id: 1 },
+      },
+      {
+        $addFields: { month: '$_id' },
+      },
+      {
+        $project: {
+          _id: 0,
+          month: 1,
+          numOfTours: 1,
+          tours: 1,
+        },
+      },
+    ]);
+
+    return res.status(200).json({
+      status: 'success',
+      data: { plan },
+    });
+  } catch (err) {
+    return res.status(404).json({
+      status: 'fail',
+      message: err.message,
+    });
+  }
+};
+
 module.exports = {
   getAllTours,
   createTour,
   getTour,
   updateTour,
   deleteTour,
+  getTourStats,
+  getMonthlyPlan,
 };
