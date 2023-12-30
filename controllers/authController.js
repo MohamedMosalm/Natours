@@ -12,6 +12,15 @@ const signToken = (id) => {
   });
 };
 
+const createAndSendToken = (user, statusCode, res) => {
+  const token = signToken(user._id);
+
+  return res.status(statusCode).json({
+    status: 'success',
+    data: { token },
+  });
+};
+
 const signUp = asyncWrapper(async (req, res, next) => {
   const { name, email, password, passwordConfirmation } = req.body;
   const newUser = await User.create({
@@ -21,15 +30,7 @@ const signUp = asyncWrapper(async (req, res, next) => {
     passwordConfirmation,
   });
 
-  const token = signToken(newUser._id);
-
-  return res.status(201).json({
-    status: 'success',
-    token,
-    data: {
-      user: newUser,
-    },
-  });
+  createAndSendToken(newUser, 201, res);
 });
 
 const login = asyncWrapper(async (req, res, next) => {
@@ -43,12 +44,7 @@ const login = asyncWrapper(async (req, res, next) => {
   if (!user || !(await user.correctPassword(password, user.password)))
     return next(new AppError('Incorrect e-mail or password!', 401));
 
-  const token = signToken(user._id);
-
-  return res.status(200).json({
-    status: 'success',
-    data: { token },
-  });
+  createAndSendToken(user, 200, res);
 });
 
 const protect = asyncWrapper(async (req, res, next) => {
@@ -160,15 +156,27 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
 
   await user.save();
 
-  const token = signToken(user._id);
-
-  return res.status(200).json({
-    status: 'success',
-    data: { token },
-  });
+  createAndSendToken(user, 200, res);
 });
 
-const updatePassword = asyncWrapper(async (req, res) => {});
+const updatePassword = asyncWrapper(async (req, res) => {
+  const { email, password, newPassword, newPasswordConfirmation } = req.body;
+  if (!email || !password) {
+    return next(new AppError('Please provide email and password', 400));
+  }
+
+  const user = await User.findOne({ email }).select('+password');
+
+  if (!user || !(await user.correctPassword(password, user.password)))
+    return next(new AppError('Incorrect e-mail or password!', 401));
+
+  user.password = newPassword;
+  user.passwordConfirmation = newPasswordConfirmation;
+
+  await user.save();
+
+  createAndSendToken(user, 200, res);
+});
 
 module.exports = {
   signUp,
