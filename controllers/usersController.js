@@ -44,6 +44,14 @@ const updateMe = asyncWrapper(async (req, res, next) => {
   });
 });
 
+const deactivateUser = asyncWrapper(async (req, res, next) => {
+  await User.findByIdAndUpdate(req.user.id, { active: false });
+  return res.status(204).json({
+    status: 'success',
+    data: null,
+  });
+});
+
 module.exports = {
   getAllUsers,
   createUser,
@@ -51,4 +59,5 @@ module.exports = {
   deleteUser,
   getUser,
   updateMe,
+  deactivateUser,
 };
