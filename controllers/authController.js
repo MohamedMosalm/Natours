@@ -76,7 +76,7 @@ const protect = asyncWrapper(async (req, res, next) => {
 
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('use recently changed password. Please login again', 401),
+      new AppError('user recently changed password. Please login again', 401),
     );
   }
 
