@@ -3,6 +3,8 @@ const User = require('../models/userModel');
 const asyncWrapper = require('./../utils/asyncWrapper');
 const jwt = require('jsonwebtoken');
 const AppError = require('../utils/AppError');
+const sendEmail = require('../utils/email');
+const crypto = require('crypto');
 
 const signToken = (id) => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
@@ -97,9 +99,83 @@ const restrictTo = (...roles) => {
   };
 };
 
+const forgotPassword = asyncWrapper(async (req, res, next) => {
+  const user = await User.findOne({ email: req.body.email });
+  if (!user) {
+    return next(new AppError('there is no user with that e-mail address'), 404);
+  }
+
+  const resetToken = user.createPasswordResetToken();
+  await user.save({ validateBeforeSave: false });
+
+  const resetURL = `${req.protocol}://${req.get(
+    'host',
+  )}/api/users/resetPassword/${resetToken}`;
+
+  const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
+
+  console.log(resetURL);
+  try {
+    await sendEmail({
+      email: user.email,
+      subject: 'your password reset token (valid for 10 mins)',
+      message,
+    });
+    res.status(200).json({
+      status: 'success',
+      message: 'token send to your e-mail!',
+    });
+  } catch (err) {
+    console.log(err);
+    user.passwordResetToken = undefined;
+    user.passwordResetExpires = undefined;
+    await user.save({ validateBeforeSave: false });
+    return next(
+      new AppError('there was an error sending email, please try again later.'),
+      500,
+    );
+  }
+});
+
+const resetPassword = asyncWrapper(async (req, res, next) => {
+  const hashedToken = crypto
+    .createHash('sha256')
+    .update(req.params.token)
+    .digest('hex');
+
+  const user = await User.findOne({
+    passwordResetToken: hashedToken,
+    passwordResetExpires: { $gt: Date.now() },
+  });
+
+  if (!user) {
+    return next(
+      new AppError('token is invalid or expired. Please try again.', 400),
+    );
+  }
+  user.password = req.body.password;
+  user.passwordConfirmation = req.body.passwordConfirmation;
+  user.passwordResetToken = undefined;
+  user.passwordResetExpires = undefined;
+
+  await user.save();
+
+  const token = signToken(user._id);
+
+  return res.status(200).json({
+    status: 'success',
+    data: { token },
+  });
+});
+
+const updatePassword = asyncWrapper(async (req, res) => {});
+
 module.exports = {
   signUp,
   login,
   protect,
   restrictTo,
+  forgotPassword,
+  resetPassword,
+  updatePassword,
 };
