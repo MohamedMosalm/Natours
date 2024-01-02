@@ -2,7 +2,11 @@ const express = require('express');
 const toursController = require(`../controllers/toursController.js`);
 const authController = require(`../controllers/authController`);
 
+const reviewRouter = require('./../routes/reviewRoute');
+
 const router = express.Router();
+
+router.use('/:tourId/reviews', reviewRouter);
 
 router.route('/tour-stats').get(toursController.getTourStats);
 router.route('/monthly-plan/:year').get(toursController.getMonthlyPlan);

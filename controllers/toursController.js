@@ -32,7 +32,7 @@ const getTour = asyncWrapper(async (req, res, next) => {
   const tour = await Tour.findById(req.params.tourId, {
     _id: false,
     __v: false,
-  });
+  }).populate('reviews');
 
   if (!tour) return next(new AppError('Tour is not find'), 404);
   return res.status(200).json({
