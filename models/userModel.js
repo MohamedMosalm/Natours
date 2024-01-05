@@ -6,28 +6,28 @@ const bcrypt = require('bcryptjs');
 const userSchema = mongoose.Schema({
   name: {
     type: String,
-    required: [true, 'A user name is required'],
+    required: [true, 'A user name is required']
   },
   email: {
     type: String,
     required: [true, 'A user email is required'],
     unique: true,
     lowercase: true,
-    validate: [validator.isEmail, 'please enter a valid email'],
+    validate: [validator.isEmail, 'please enter a valid email']
   },
   photo: {
-    type: String,
+    type: String
   },
   role: {
     type: String,
     enum: ['admin', 'guide', 'user', 'lead-guide'],
-    default: 'user',
+    default: 'user'
   },
   password: {
     type: String,
     required: [true, 'A user password is required'],
     minlength: 8,
-    select: false,
+    select: false
   },
   passwordConfirmation: {
     type: String,
@@ -36,14 +36,14 @@ const userSchema = mongoose.Schema({
       validator: function (value) {
         return value === this.password;
       },
-      message: `password confirmation doesn't match password`,
+      message: `password confirmation doesn't match password`
     },
-    select: false,
+    select: false
   },
   passwordChangedAt: Date,
   passwordResetToken: String,
   passwordResetExpires: Date,
-  active: { type: Boolean, default: true, select: false },
+  active: { type: Boolean, default: true, select: false }
 });
 
 userSchema.pre(/^find/, function (next) {
@@ -66,7 +66,7 @@ userSchema.pre('save', async function (next) {
 
 userSchema.methods.correctPassword = async function (
   reqPassword,
-  userPassword,
+  userPassword
 ) {
   return await bcrypt.compare(reqPassword, userPassword);
 };
@@ -75,7 +75,7 @@ userSchema.methods.changedPasswordAfter = function (JWTTimestamp) {
   if (this.passwordChangedAt) {
     const changedTimestamp = parseInt(
       this.passwordChangedAt.getTime() / 1000,
-      10,
+      10
     );
     return changedTimestamp > JWTTimestamp;
   }

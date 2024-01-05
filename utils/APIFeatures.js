@@ -9,10 +9,10 @@ class APIFeatures {
   filter() {
     const queryObj = { ...this.queryString };
     const exculdedFields = ['page', 'limit', 'sort', 'fields'];
-    exculdedFields.forEach((field) => delete queryObj[field]);
+    exculdedFields.forEach(field => delete queryObj[field]);
 
     let queryStr = JSON.stringify(queryObj);
-    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, (match) => `$${match}`);
+    queryStr = queryStr.replace(/\b(gte|gt|lte|lt)\b/g, match => `$${match}`);
 
     this.query.find(JSON.parse(queryStr));
 

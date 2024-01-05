@@ -6,7 +6,7 @@ const reviewRouter = require('./../routes/reviewRoute');
 
 const router = express.Router();
 
-router.use('/:tourId/reviews', reviewRouter);
+router.use('/:id/reviews', reviewRouter);
 
 router.route('/tour-stats').get(toursController.getTourStats);
 router.route('/monthly-plan/:year').get(toursController.getMonthlyPlan);
@@ -17,13 +17,13 @@ router
   .post(toursController.createTour);
 
 router
-  .route('/:tourId')
+  .route('/:id')
   .get(toursController.getTour)
   .patch(toursController.updateTour)
   .delete(
     authController.protect,
     authController.restrictTo('admin', 'lead-guide'),
-    toursController.deleteTour,
+    toursController.deleteTour
   );
 
 module.exports = router;

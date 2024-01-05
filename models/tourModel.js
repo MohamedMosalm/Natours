@@ -7,32 +7,32 @@ const tourSchema = new mongoose.Schema(
     name: {
       type: String,
       required: [true, 'A tour name is required'],
-      unique: true,
+      unique: true
     },
     slug: String,
     duration: {
       type: Number,
-      required: [true, 'A tour duration is required'],
+      required: [true, 'A tour duration is required']
     },
     maxGroupSize: {
       type: Number,
-      required: [true, 'A tour max group size is required'],
+      required: [true, 'A tour max group size is required']
     },
     difficulty: {
       type: String,
-      required: [true, 'A tour difficulty is required'],
+      required: [true, 'A tour difficulty is required']
     },
     ratingsAverage: {
       type: Number,
-      default: 0,
+      default: 0
     },
     ratingsQuantity: {
       type: Number,
-      default: 0,
+      default: 0
     },
     price: {
       type: Number,
-      required: [true, 'A tour price is required'],
+      required: [true, 'A tour price is required']
     },
     priceDiscount: {
       type: Number,
@@ -40,67 +40,67 @@ const tourSchema = new mongoose.Schema(
         validator: function (val) {
           return val < this.price;
         },
-        message: 'Discount price ({VALUE}) should be below regular price',
-      },
+        message: 'Discount price ({VALUE}) should be below regular price'
+      }
     },
     summary: {
       type: String,
       trim: true,
-      required: [true, 'A tour summary is required'],
+      required: [true, 'A tour summary is required']
     },
     description: {
       type: String,
-      trim: true,
+      trim: true
     },
     imageCover: {
       type: String,
-      required: [true, 'A tour cover image is required'],
+      required: [true, 'A tour cover image is required']
     },
     images: [String],
     createdAt: {
       type: Date,
       default: Date.now,
-      select: false,
+      select: false
     },
     startDates: [Date],
     secretTour: {
       type: Boolean,
-      default: false,
+      default: false
     },
     startLocation: {
       type: {
         type: String,
         default: 'Point',
-        enum: ['Point'],
+        enum: ['Point']
       },
       coordinates: [Number],
       address: String,
-      description: String,
+      description: String
     },
     locations: [
       {
         type: {
           type: String,
           default: 'Point',
-          enum: ['Point'],
+          enum: ['Point']
         },
         coordinates: [Number],
         address: String,
         description: String,
-        day: Number,
-      },
+        day: Number
+      }
     ],
     guides: [
       {
         type: mongoose.Schema.ObjectId,
-        ref: 'User',
-      },
-    ],
+        ref: 'User'
+      }
+    ]
   },
   {
     toJSON: { virtuals: true },
-    toObject: { virtuals: true },
-  },
+    toObject: { virtuals: true }
+  }
 );
 
 tourSchema.virtual('durationWeeks').get(function () {
@@ -110,7 +110,7 @@ tourSchema.virtual('durationWeeks').get(function () {
 tourSchema.virtual('reviews', {
   ref: 'Review',
   foreignField: 'tour',
-  localField: '_id',
+  localField: '_id'
 });
 
 tourSchema.pre('save', function (next) {

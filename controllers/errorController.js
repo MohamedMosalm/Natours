@@ -1,18 +1,18 @@
 const AppError = require('./../utils/AppError');
 
-const handleCastErrorDB = (err) => {
+const handleCastErrorDB = err => {
   const message = `Invalid ${err.path}: ${err.value}`;
   return new AppError(message, 400);
 };
 
-const handleDuplicateFieldsDB = (err) => {
+const handleDuplicateFieldsDB = err => {
   const val = err.errmsg.match(/"(.*?)"/)[1];
   const message = `Duplicate field value : ${val} please use another value instead`;
   return new AppError(message, 400);
 };
 
-const handleValidationErrorDB = (err) => {
-  const errors = Object.values(err.errors).map((val) => val.message);
+const handleValidationErrorDB = err => {
+  const errors = Object.values(err.errors).map(val => val.message);
   const message = `Invalid input data. ${errors.join('. ')}`;
   return new AppError(message, 400);
 };
@@ -22,7 +22,7 @@ const sendErrorDev = (err, res) => {
     status: err.status,
     error: err,
     message: err.message,
-    stack: err.stack,
+    stack: err.stack
   });
 };
 
@@ -30,13 +30,13 @@ const sendErrorProd = (err, res) => {
   if (err.isOpertional) {
     return res.status(err.statusCode).json({
       status: err.status,
-      message: err.message,
+      message: err.message
     });
   } else {
     console.error('Error 😭', err);
     return res.status(500).json({
       status: 'errot',
-      message: 'something went wrong!',
+      message: 'something went wrong!'
     });
   }
 };

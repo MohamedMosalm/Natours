@@ -23,7 +23,7 @@ if (process.env.NODE_ENV === 'development') {
 const limiter = rateLimit({
   max: 100,
   windowMs: 60 * 60 * 1000,
-  message: 'Too many requests from this IP, please try again later.',
+  message: 'Too many requests from this IP, please try again later.'
 });
 
 app.use('/api', limiter);
@@ -39,9 +39,9 @@ app.use(
       'difficulty',
       'ratingsAverage',
       'ratingsQuantity',
-      'price',
-    ],
-  }),
+      'price'
+    ]
+  })
 );
 
 app.use('/api/tours', tourRouter);

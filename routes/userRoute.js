@@ -12,15 +12,22 @@ router.patch('/updateMe', authController.protect, usersController.updateMe);
 router.delete(
   '/deactivateUser',
   authController.protect,
-  usersController.deactivateUser,
+  usersController.deactivateUser
+);
+router.get(
+  '/me',
+  authController.protect,
+  usersController.getMe,
+  usersController.getUser
 );
 
 router
   .route('/')
   .get(usersController.getAllUsers)
   .post(usersController.createUser);
+
 router
-  .route('/:userId')
+  .route('/:id')
   .get(usersController.getUser)
   .patch(usersController.updateUser)
   .delete(usersController.deleteUser);

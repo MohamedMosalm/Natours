@@ -6,9 +6,9 @@ const AppError = require('../utils/AppError');
 const sendEmail = require('../utils/email');
 const crypto = require('crypto');
 
-const signToken = (id) => {
+const signToken = id => {
   return jwt.sign({ id }, process.env.JWT_SECRET, {
-    expiresIn: process.env.JWT_EXPIRATION,
+    expiresIn: process.env.JWT_EXPIRATION
   });
 };
 
@@ -17,9 +17,9 @@ const createAndSendToken = (user, statusCode, res) => {
 
   const cookieOptions = {
     expires: new Date(
-      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 1000 * 60 * 60 * 24,
+      Date.now() + process.env.JWT_COOKIE_EXPIRES_IN * 1000 * 60 * 60 * 24
     ),
-    httpOnly: true,
+    httpOnly: true
   };
 
   if (process.env.NODE_ENV === 'production') cookieOptions.secure = true;
@@ -30,7 +30,7 @@ const createAndSendToken = (user, statusCode, res) => {
 
   return res.status(statusCode).json({
     status: 'success',
-    data: { token },
+    data: { token }
   });
 };
 
@@ -40,7 +40,7 @@ const signUp = asyncWrapper(async (req, res, next) => {
     name,
     email,
     password,
-    passwordConfirmation,
+    passwordConfirmation
   });
 
   createAndSendToken(newUser, 201, res);
@@ -72,7 +72,7 @@ const protect = asyncWrapper(async (req, res, next) => {
   if (!token) {
     return next(
       new AppError('You are not logged in! please loggin to get access'),
-      401,
+      401
     );
   }
 
@@ -83,13 +83,13 @@ const protect = asyncWrapper(async (req, res, next) => {
   if (!currentUser) {
     return next(
       new AppError('the user belongs to this token is no longer exists.'),
-      401,
+      401
     );
   }
 
   if (currentUser.changedPasswordAfter(decoded.iat)) {
     return next(
-      new AppError('user recently changed password. Please login again', 401),
+      new AppError('user recently changed password. Please login again', 401)
     );
   }
 
@@ -101,7 +101,7 @@ const restrictTo = (...roles) => {
   return (req, res, next) => {
     if (!roles.includes(req.user.role)) {
       return next(
-        new AppError('You do not have permission to perform this action', 403),
+        new AppError('You do not have permission to perform this action', 403)
       );
     }
     next();
@@ -118,7 +118,7 @@ const forgotPassword = asyncWrapper(async (req, res, next) => {
   await user.save({ validateBeforeSave: false });
 
   const resetURL = `${req.protocol}://${req.get(
-    'host',
+    'host'
   )}/api/users/resetPassword/${resetToken}`;
 
   const message = `Forgot your password? Submit a PATCH request with your new password and passwordConfirm to: ${resetURL}.\nIf you didn't forget your password, please ignore this email!`;
@@ -128,11 +128,11 @@ const forgotPassword = asyncWrapper(async (req, res, next) => {
     await sendEmail({
       email: user.email,
       subject: 'your password reset token (valid for 10 mins)',
-      message,
+      message
     });
     res.status(200).json({
       status: 'success',
-      message: 'token send to your e-mail!',
+      message: 'token send to your e-mail!'
     });
   } catch (err) {
     console.log(err);
@@ -141,7 +141,7 @@ const forgotPassword = asyncWrapper(async (req, res, next) => {
     await user.save({ validateBeforeSave: false });
     return next(
       new AppError('there was an error sending email, please try again later.'),
-      500,
+      500
     );
   }
 });
@@ -154,12 +154,12 @@ const resetPassword = asyncWrapper(async (req, res, next) => {
 
   const user = await User.findOne({
     passwordResetToken: hashedToken,
-    passwordResetExpires: { $gt: Date.now() },
+    passwordResetExpires: { $gt: Date.now() }
   });
 
   if (!user) {
     return next(
-      new AppError('token is invalid or expired. Please try again.', 400),
+      new AppError('token is invalid or expired. Please try again.', 400)
     );
   }
   user.password = req.body.password;
@@ -198,5 +198,5 @@ module.exports = {
   restrictTo,
   forgotPassword,
   resetPassword,
-  updatePassword,
+  updatePassword
 };

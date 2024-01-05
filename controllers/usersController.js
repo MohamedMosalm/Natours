@@ -1,10 +1,11 @@
 const User = require('../models/userModel');
 const asyncWrapper = require('./../utils/asyncWrapper');
 const AppError = require('../utils/AppError');
+const Factory = require('./handlerFactory');
 
 const filterObj = (obj, ...allowedFields) => {
   const filteredObj = {};
-  Object.keys(obj).forEach((key) => {
+  Object.keys(obj).forEach(key => {
     if (allowedFields.includes(key)) {
       filteredObj[key] = obj[key];
     }
@@ -12,19 +13,18 @@ const filterObj = (obj, ...allowedFields) => {
   return filteredObj;
 };
 
-const getAllUsers = (req, res) => {};
-const createUser = (req, res) => {};
-const updateUser = (req, res) => {};
-const deleteUser = (req, res) => {};
-const getUser = (req, res) => {};
+const getAllUsers = Factory.getAll(User);
+const updateUser = Factory.updateOne(User);
+const deleteUser = Factory.deleteOne(User);
+const getUser = Factory.getOne(User);
 
 const updateMe = asyncWrapper(async (req, res, next) => {
   if (req.body.password || req.body.passwordConfirmation) {
     return next(
       new AppError(
         'this route is not for routes updates, please use /updatePassword',
-        400,
-      ),
+        400
+      )
     );
   }
 
@@ -34,23 +34,35 @@ const updateMe = asyncWrapper(async (req, res, next) => {
     filteredObject,
     {
       new: true,
-      runValidators: true,
-    },
+      runValidators: true
+    }
   );
 
   return res.status(200).json({
     status: 'success',
-    data: { user: updatedUser },
+    data: { user: updatedUser }
   });
 });
+
+const createUser = (req, res) => {
+  res.status(500).json({
+    status: 'error',
+    message: 'This route is not defined! Please use /signup instead'
+  });
+};
 
 const deactivateUser = asyncWrapper(async (req, res, next) => {
   await User.findByIdAndUpdate(req.user.id, { active: false });
   return res.status(204).json({
     status: 'success',
-    data: null,
+    data: null
   });
 });
+
+const getMe = (req, res, next) => {
+  req.params.id = req.user.id;
+  next();
+};
 
 module.exports = {
   getAllUsers,
@@ -60,4 +72,5 @@ module.exports = {
   getUser,
   updateMe,
   deactivateUser,
+  getMe
 };
